@@ -16,10 +16,10 @@
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Guitar controller - USB & wireless (multi-platform)[Wii,Xbox,PS,PC]</h3>
+  <h3 align="center">Guitar controller - USB & wireless (multi-platform)</h3>
 
   <p align="center">
-    Guitar (prototype for now) to rock!
+    Guitar controller to rock! [Wii | Xbox | PS | PC]
     <br />
     <br />
     <a href="https://github.com/MarcAndreJean/rockband-guitar-usb-and-xbox-rf-module/issues">Report Bug</a>
