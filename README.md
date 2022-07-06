@@ -17,7 +17,7 @@
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Rockband / Guitar Hero / Clone hero - Guitar USB (multi-platform)[Wii,Xbox,PS] with RF Module (multi-platform)</h3>
+  <h3 align="center">Guitar controller - USB & wireless (multi-platform)[Wii,Xbox,PS,PC]</h3>
 
   <p align="center">
     Guitar (prototype for now) to rock!
@@ -160,7 +160,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@MkII_4ndr3](https://twitter.com/MkII_4ndr3) - the.mapaq@gmail.com
+Marc-André Jean - [@MkII_4ndr3](https://twitter.com/MkII_4ndr3) - the.mapaq@gmail.com
 
 Project Link: [https://github.com/MarcAndreJean/rockband-guitar-usb-and-xbox-rf-module](https://github.com/MarcAndreJean/rockband-guitar-usb-and-xbox-rf-module)
 
