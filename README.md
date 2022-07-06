@@ -60,6 +60,7 @@ V0.1
 - [ ] Mini-controller code
   - [ ] Reproduce mini-controller with an arduino (receive inputs)
   - [ ]  Send output to USB (xbox and pc)
+
 v0.2
 - [ ] Body Parts
   - [ ] Prototype whammy
@@ -68,10 +69,12 @@ v0.2
   - [ ] Prototype default button (back, start, A, B, X, Y, Up, Down, Bottom, Left, Right)
   - [ ] Prototype controller number (4 leds) + menu button
   - [ ] Prototype effect selector (ez)
+
 v0.3
 - [ ] Neck Parts
   - [ ] Prototype one fret button
   - [ ] Prototype guitar fret with 5 frets
+
 v.04
 - [ ] Guitar
   - [ ] Prototype guitar body
