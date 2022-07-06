@@ -75,7 +75,7 @@ v0.3
   - [ ] Prototype one fret button
   - [ ] Prototype guitar fret with 5 frets
 
-v.04
+v0.4
 - [ ] Guitar
   - [ ] Prototype guitar body
   - [ ] Prototype guitar neck
