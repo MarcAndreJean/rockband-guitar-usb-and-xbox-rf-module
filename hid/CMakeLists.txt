@@ -10,12 +10,12 @@ project(my_project)
 pico_sdk_init()
 
 # rest of your project
-add_executable(controller
-    controller.c
+add_executable(hid
+hid.c
 )
 
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(controller pico_stdlib)
+target_link_libraries(hid pico_stdlib)
 
 # create map/bin/hex/uf2 file in addition to ELF.
-pico_add_extra_outputs(controller)
+pico_add_extra_outputs(hid)

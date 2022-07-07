@@ -19,8 +19,8 @@ C:\dev\pico-sdk> setx PICO_SDK_PATH "C:\dev\pico-sdk"
 ## Build
 
 ```
-C:\dev\rockband-guitar-usb-and-xbox-rf-module\mini-controller> mkdir build
-C:\dev\rockband-guitar-usb-and-xbox-rf-module\mini-controller> cd build
-C:\dev\rockband-guitar-usb-and-xbox-rf-module\mini-controller> cmake -G "NMake Makefiles" ..
-C:\dev\rockband-guitar-usb-and-xbox-rf-module\mini-controller> nmake
+C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> mkdir build
+C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> cd build
+C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> cmake -G "NMake Makefiles" ..
+C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> nmake
 ```
