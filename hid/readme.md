@@ -12,7 +12,7 @@ To build you will need to install some extra tools.
 ```
 C:\dev> git clone -b master https://github.com/raspberrypi/pico-sdk.git
 C:\dev> cd pico-sdk
-C:\dev\pico-sdk> git submodule update --init
+C:\dev\pico-sdk> git submodule update --init --recursive
 C:\dev\pico-sdk> setx PICO_SDK_PATH "C:\dev\pico-sdk"
 ```
 
