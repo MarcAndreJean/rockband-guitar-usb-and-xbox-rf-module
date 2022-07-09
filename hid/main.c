@@ -1,6 +1,3 @@
-#define CFG_TUSB_MCU rp2040
-#define TUP_DCD_ENDPOINT_MAX 8
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

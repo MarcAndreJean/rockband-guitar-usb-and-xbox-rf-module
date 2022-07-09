@@ -10,32 +10,20 @@ include(tinyusb/hw/bsp/family_support.cmake)
 family_get_project_name(${PROJECT} ${CMAKE_CURRENT_LIST_DIR})
 project(${PROJECT})
 
-# initialize the Raspberry Pi Pico SDK
-pico_sdk_init()
+family_initialize_project(${PROJECT} ${CMAKE_CURRENT_LIST_DIR})
 
-# rest of your project
-add_executable(main
-    main.c
-)
+add_executable(${PROJECT})
 
-target_sources(main PUBLIC
-    main.c
-    usb_descriptors.c
-)
+target_sources(${PROJECT} PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/main.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/usb_descriptors.c
+        )
 
-include_directories(
-    tinyusb/src
-    tinyusb/hw
-)
+# Example include
+target_include_directories(${PROJECT} PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        )
 
-target_include_directories(main PUBLIC
-    .
-    tinyusb/src
-    tinyusb
-)
-
-# Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(main pico_stdlib)
-
-# create map/bin/hex/uf2 file in addition to ELF.
-pico_add_extra_outputs(main)
+# Configure compilation flags and libraries for the example... see the corresponding function
+# in hw/bsp/FAMILY/family.cmake for details.
+family_configure_device_example(${PROJECT})

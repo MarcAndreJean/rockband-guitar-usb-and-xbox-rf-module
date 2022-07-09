@@ -21,6 +21,6 @@ C:\dev\pico-sdk> setx PICO_SDK_PATH "C:\dev\pico-sdk"
 ```
 C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> mkdir build
 C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> cd build
-C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> cmake -G "NMake Makefiles" ..
+C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> cmake -G "NMake Makefiles" .. -DFAMILY=rp2040
 C:\dev\rockband-guitar-usb-and-xbox-rf-module\hid> nmake
 ```
