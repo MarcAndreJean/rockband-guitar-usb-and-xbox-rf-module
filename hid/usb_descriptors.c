@@ -11,7 +11,7 @@
 #define USB_PID           (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
                            _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4) )
 
-#define USB_VID   0xCafe
+#define USB_VID   0x1BAD
 #define USB_BCD   0x0200
 
 //--------------------------------------------------------------------+
@@ -19,17 +19,17 @@
 //--------------------------------------------------------------------+
 tusb_desc_device_t const desc_device =
 {
-    .bLength            = sizeof(tusb_desc_device_t),
-    .bDescriptorType    = TUSB_DESC_DEVICE,
+    .bLength            = sizeof(tusb_desc_device_t), //0x12
+    .bDescriptorType    = TUSB_DESC_DEVICE, // 0x01
     .bcdUSB             = USB_BCD,
-    .bDeviceClass       = 0x00,
-    .bDeviceSubClass    = 0x00,
-    .bDeviceProtocol    = 0x00,
-    .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
+    .bDeviceClass       = 0xFF,
+    .bDeviceSubClass    = 0xFF,
+    .bDeviceProtocol    = 0xFF,
+    .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE, // 0x08
 
-    .idVendor           = USB_VID,
-    .idProduct          = USB_PID,
-    .bcdDevice          = 0x0100,
+    .idVendor           = USB_VID, // 0x1BAD
+    .idProduct          = USB_PID, // 0x0002
+    .bcdDevice          = 0x0103,
 
     .iManufacturer      = 0x01,
     .iProduct           = 0x02,
