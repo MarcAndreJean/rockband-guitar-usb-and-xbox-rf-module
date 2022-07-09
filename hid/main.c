@@ -81,10 +81,29 @@ void tud_resume_cb(void)
 // USB HID
 //--------------------------------------------------------------------+
 
+int32_t tud_msc_read10_cb (uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize)
+{
+  return 1;
+}
+int32_t tud_msc_scsi_cb (uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, uint16_t bufsize) {
+  return 1;
+}
+int32_t tud_msc_write10_cb (uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
+  return 1;
+}
+void tud_msc_capacity_cb(uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
+  return;
+}
+void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4]) {
+  return;
+}
+bool tud_msc_test_unit_ready_cb(uint8_t lun) { return true;}
+
 static void send_hid_report(uint8_t report_id, uint32_t btn)
 {
+  return;
   // skip if hid is not ready yet
-  if ( !tud_hid_ready() ) return;
+  //if ( !tud_hid_ready() ) return;
 
   switch(report_id)
   {
@@ -98,12 +117,12 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
         uint8_t keycode[6] = { 0 };
         keycode[0] = HID_KEY_A;
 
-        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
+        //tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
         has_keyboard_key = true;
       }else
       {
         // send empty key report if previously has key pressed
-        if (has_keyboard_key) tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
+        //if (has_keyboard_key) tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
         has_keyboard_key = false;
       }
     }
@@ -114,7 +133,7 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
       int8_t const delta = 5;
 
       // no button, right + down, no scroll, no pan
-      tud_hid_mouse_report(REPORT_ID_MOUSE, 0x00, delta, delta, 0, 0);
+      //tud_hid_mouse_report(REPORT_ID_MOUSE, 0x00, delta, delta, 0, 0);
     }
     break;
 
@@ -127,13 +146,13 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
       {
         // volume down
         uint16_t volume_down = HID_USAGE_CONSUMER_VOLUME_DECREMENT;
-        tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &volume_down, 2);
+        //tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &volume_down, 2);
         has_consumer_key = true;
       }else
       {
         // send empty key report (release key) if previously has key pressed
         uint16_t empty_key = 0;
-        if (has_consumer_key) tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &empty_key, 2);
+        //if (has_consumer_key) tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &empty_key, 2);
         has_consumer_key = false;
       }
     }
@@ -154,14 +173,14 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
       {
         report.hat = GAMEPAD_HAT_UP;
         report.buttons = GAMEPAD_BUTTON_A;
-        tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
+        //tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
 
         has_gamepad_key = true;
       }else
       {
         report.hat = GAMEPAD_HAT_CENTERED;
         report.buttons = 0;
-        if (has_gamepad_key) tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
+        //if (has_gamepad_key) tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
         has_gamepad_key = false;
       }
     }
