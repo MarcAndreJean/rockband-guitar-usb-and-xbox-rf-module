@@ -107,23 +107,78 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t itf)
 enum
 {
   ITF_NUM_HID1 = 0,
+  ITF_NUM_HID2,
+  ITF_NUM_HID3,
+  ITF_NUM_HID4,
   ITF_NUM_TOTAL
 };
 
-#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_LEN)
+
+// Interface #1
+#define TUD_VENDOR_DESC_1_LEN  (9+17+7+7)
+
+#define TUD_VENDOR_DESCRIPTOR_1(_itfnum, _stridx, _subClass, _protocol) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, TUSB_CLASS_VENDOR_SPECIFIC, _subClass, _protocol, _stridx,\
+  /* HID */\
+  17, 0x21, 0x10, 0x01, 0x06, 0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03,\
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, 0x81, 0x03, U16_TO_U8S_LE(0x0020), 0x04,\
+  /* Endpoint Out */\
+  7, TUSB_DESC_ENDPOINT, 0x02, 0x03, U16_TO_U8S_LE(0x0020), 0x08
+
+
+// Interface #2
+#define TUD_VENDOR_DESC_2_LEN  (9+27+7+7+7+7)
+
+#define TUD_VENDOR_DESCRIPTOR_2(_itfnum, _stridx, _subClass, _protocol) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 4, TUSB_CLASS_VENDOR_SPECIFIC, _subClass, _protocol, _stridx,\
+  /* HID */\
+  27, 0x21, 0x00, 0x01, 0x01, 0x01, 0x83, 0x40, 0x01, 0x04, 0x20, 0x16, 0x85, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
+  /* Endpoint In 1*/\
+  7, TUSB_DESC_ENDPOINT, 0x83, 0x03, U16_TO_U8S_LE(0x0020), 0x02,\
+  /* Endpoint Out 1*/\
+  7, TUSB_DESC_ENDPOINT, 0x04, 0x03, U16_TO_U8S_LE(0x0020), 0x04,\
+  /* Endpoint In 2*/\
+  7, TUSB_DESC_ENDPOINT, 0x85, 0x03, U16_TO_U8S_LE(0x0020), 0x40,\
+  /* Endpoint Out 2*/\
+  7, TUSB_DESC_ENDPOINT, 0x05, 0x03, U16_TO_U8S_LE(0x0020), 0x10
+
+
+// Interface #3
+#define TUD_VENDOR_DESC_3_LEN  (9+9+7)
+
+#define TUD_VENDOR_DESCRIPTOR_3(_itfnum, _stridx, _subClass, _protocol) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 1, TUSB_CLASS_VENDOR_SPECIFIC, _subClass, _protocol, _stridx,\
+  /* HID */\
+  9, 0x21, 0x00, 0x01, 0x01, 0x22, 0x86, 0x07, 0x00,\
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, 0x86, 0x03, U16_TO_U8S_LE(0x0020), 0x10
+
+
+// Interface #4
+#define TUD_VENDOR_DESC_4_LEN  (9+6)
+
+#define TUD_VENDOR_DESCRIPTOR_4(_itfnum, _stridx, _subClass, _protocol) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, _subClass, _protocol, _stridx,\
+  /* HID */\
+  6, 0x41, 0x00, 0x01, 0x01, 0x03
+
+
+// Microsoft descriptor
+#define MICROSOFT_OS_DESC_LEN 18
+#define MICROSOFT_OS_DESC() \
+  MICROSOFT_OS_DESC_LEN, 0x03, 0x4D, 0x00, 0x53, 0x00, 0x46, 0x00, 0x54, 0x00, 0x31, 0x00, 0x30, 0x00, 0x30, 0x00, 0x90, 0x00
+
+#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_1_LEN + TUD_VENDOR_DESC_2_LEN + TUD_VENDOR_DESC_3_LEN + TUD_VENDOR_DESC_4_LEN + MICROSOFT_OS_DESC_LEN)
 
 #define EPNUM_HID1   0x81
 #define EPNUM_HID2   0x82
 #define EPNUM_HID3   0x83
 #define EPNUM_HID4   0x84
-
-#define TUD_VENDOR_DESCRIPTOR_MORE(_itfnum, _stridx, _epout, _epin, _epsize, _subClass, _protocol) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, TUSB_CLASS_VENDOR_SPECIFIC, _subClass, _protocol, _stridx,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_BULK, U16_TO_U8S_LE(_epsize), 0,\
-  /* Endpoint Out */\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_BULK, U16_TO_U8S_LE(_epsize), 0
 
 uint8_t const desc_configuration[] =
 {
@@ -131,8 +186,14 @@ uint8_t const desc_configuration[] =
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
   // EP: 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-  // Interface number, string index, EP In, EP Out address, EP size
-  TUD_VENDOR_DESCRIPTOR_MORE(ITF_NUM_HID1, 0, 0x81, 0x02, TUD_OPT_HIGH_SPEED ? 512 : 64, 0x5D, 0x01),
+  // bInterfaceNumber, iInterface, bInterfaceSubClass, bInterfaceProtocol
+  TUD_VENDOR_DESCRIPTOR_1(ITF_NUM_HID1, 0x00, 0x5D, 0x01),
+  TUD_VENDOR_DESCRIPTOR_2(ITF_NUM_HID2, 0x00, 0x5D, 0x03),
+  TUD_VENDOR_DESCRIPTOR_3(ITF_NUM_HID3, 0x00, 0x5D, 0x02),
+  TUD_VENDOR_DESCRIPTOR_4(ITF_NUM_HID4, 0x04, 0xFD, 0x13),
+
+  // Microsoft OS Descriptor
+  MICROSOFT_OS_DESC()
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
