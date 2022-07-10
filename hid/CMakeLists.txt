@@ -1,6 +1,6 @@
 set(PROJECT "hid")
 set(BOARD "pico_sdk")
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.5)
 
 # initialize the SDK based on PICO_SDK_PATH
 # note: this must happen before project()
