@@ -216,8 +216,7 @@ char const* string_desc_arr [] =
   "Harmonix Music",                // 1: Manufacturer
   "Harmonix Guitar for Xbox 360",  // 2: Product
   "003D4C96",                      // 3: Serials, should use chip ID
-  "Harmonix Guitar for Xbox 360",  // 4: CDC Interface
-  "Harmonix Guitar for Xbox 360"   // 5: Vendor Interface
+  "Xbox Security Method 3, Version 1.00, � 2005 Microsoft Corporation. All rights reserved."
 };
 
 static uint16_t _desc_str[32];
