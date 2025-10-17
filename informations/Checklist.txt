@@ -1,0 +1,26 @@
+# Checklist
+
+- [x]  Device descriptor
+- [x]  Configuration descriptor (except totalLength)
+    - [x]  Interface 1
+        - [x]  HID
+        - [x]  Endpoint In
+        - [x]  Endpoint Out
+    - [x]  Interface 2
+        - [x]  HID
+        - [x]  Endpoints
+    - [x]  Interface 3
+        - [x]  HID
+        - [x]  Endpoints
+    - [x]  Interface 4
+        - [x]  HID
+        - [x]  Endpoints
+    - [ ]  Windows OS 1.0 registry
+        - [x]  OS string descriptor
+        - [ ]  OS feature descriptor
+    
+    OS feature descriptor is broking other shits
+    
+    Check comms with virtual boxing?
+    
+    https://github.com/openrazer/openrazer/wiki/Reverse-Engineering-USB-Protocol
