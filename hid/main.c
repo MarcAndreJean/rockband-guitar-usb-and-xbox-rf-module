@@ -6,6 +6,10 @@
 #include "tusb.h"
 #include "usb_descriptors.h"
 
+// External reference to MS OS 1.0 descriptors
+extern uint8_t const desc_ms_os_1_0_compat_id[];
+#define MS_OS_1_0_COMPAT_ID_LEN  (16 + 24 * 1)  // Header + 1 function section
+
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
@@ -218,27 +222,28 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
   switch (request->bmRequestType_bit.type)
   {
     case TUSB_REQ_TYPE_VENDOR:
-      switch (request->bRequest)
+      // Microsoft OS 1.0 Descriptor requests
+      // bRequest = 0x90 (MS_OS_1_0_VENDOR_CODE from usb_descriptors.c)
+      if (request->bRequest == 0x90)
       {
-        case 0:
-          // match vendor request in BOS descriptor
-          // Get landing page url
-          return tud_control_xfer(rhport, request, (void*)(uintptr_t) &desc_url, desc_url.bLength);
-
-        case 1:
-          if ( request->wIndex == 7 )
-          {
-            // Get Microsoft OS 2.0 compatible descriptor
-            uint16_t total_len;
-            memcpy(&total_len, desc_ms_os_20+8, 2);
-
-            return tud_control_xfer(rhport, request, (void*)(uintptr_t) desc_ms_os_20, total_len);
-          }else
-          {
-            return false;
-          }
-
-        default: break;
+        if (request->wIndex == 0x0004)
+        {
+          // Extended Compat ID OS Feature Descriptor
+          // This returns "XUSB10" which tells Windows to load xusb22.sys driver
+          return tud_control_xfer(rhport, request, (void*)(uintptr_t) desc_ms_os_1_0_compat_id, MS_OS_1_0_COMPAT_ID_LEN);
+        }
+        else if (request->wIndex == 0x0005)
+        {
+          // Extended Properties OS Feature Descriptor (not implemented for Xbox controllers)
+          return false;
+        }
+      }
+      // Legacy vendor requests (kept for compatibility)
+      else if (request->bRequest == 0)
+      {
+        // match vendor request in BOS descriptor
+        // Get landing page url
+        return tud_control_xfer(rhport, request, (void*)(uintptr_t) &desc_url, desc_url.bLength);
       }
     break;
 

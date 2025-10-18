@@ -169,12 +169,11 @@ enum
   6, 0x41, 0x00, 0x01, 0x01, 0x03
 
 
-// Microsoft descriptor
-#define MICROSOFT_OS_DESC_LEN 18
-#define MICROSOFT_OS_DESC() \
-  MICROSOFT_OS_DESC_LEN, 0x03, 0x4D, 0x00, 0x53, 0x00, 0x46, 0x00, 0x54, 0x00, 0x31, 0x00, 0x30, 0x00, 0x30, 0x00, 0x90, 0x00
+// Microsoft OS 1.0 String Descriptor - NOT included in config descriptor!
+// This is returned when Windows requests string descriptor at index 0xEE
+#define MS_OS_1_0_VENDOR_CODE 0x90
 
-#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_1_LEN + TUD_VENDOR_DESC_2_LEN + TUD_VENDOR_DESC_3_LEN + TUD_VENDOR_DESC_4_LEN + MICROSOFT_OS_DESC_LEN)
+#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_1_LEN + TUD_VENDOR_DESC_2_LEN + TUD_VENDOR_DESC_3_LEN + TUD_VENDOR_DESC_4_LEN)
 
 #define EPNUM_HID1   0x81
 #define EPNUM_HID2   0x82
@@ -184,17 +183,15 @@ enum
 uint8_t const desc_configuration[] =
 {
   // Config number, interface count, string index, total length, attribute, power in mA
-  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+  // Real device uses 500mA (0xFA), not 100mA
+  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 500),
 
   // EP: 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
   // bInterfaceNumber, iInterface, bInterfaceSubClass, bInterfaceProtocol
   TUD_VENDOR_DESCRIPTOR_1(ITF_NUM_HID1, 0x00, 0x5D, 0x01),
   TUD_VENDOR_DESCRIPTOR_2(ITF_NUM_HID2, 0x00, 0x5D, 0x03),
   TUD_VENDOR_DESCRIPTOR_3(ITF_NUM_HID3, 0x00, 0x5D, 0x02),
-  TUD_VENDOR_DESCRIPTOR_4(ITF_NUM_HID4, 0x04, 0xFD, 0x13),
-
-  // Microsoft OS Descriptor
-  MICROSOFT_OS_DESC()
+  TUD_VENDOR_DESCRIPTOR_4(ITF_NUM_HID4, 0x04, 0xFD, 0x13)
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
@@ -210,68 +207,51 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // BOS Descriptor
 //--------------------------------------------------------------------+
 
-/* Microsoft OS 2.0 registry property descriptor
-Per MS requirements https://msdn.microsoft.com/en-us/library/windows/hardware/hh450799(v=vs.85).aspx
-device should create DeviceInterfaceGUIDs. It can be done by driver and
-in case of real PnP solution device should expose MS "Microsoft OS 2.0
-registry property descriptor". Such descriptor can insert any record
-into Windows registry per device/configuration/interface. In our case it
-will insert "DeviceInterfaceGUIDs" multistring property.
-
-GUID is freshly generated and should be OK to use.
-
-https://developers.google.com/web/fundamentals/native-hardware/build-for-webusb/
-(Section Microsoft OS compatibility descriptors)
-*/
-
-#define VENDOR_REQUEST_1 1
-#define VENDOR_REQUEST_2 2
-#define ITF_NUM_VENDOR 2
-
-#define BOS_TOTAL_LEN      (0x12)
-
-#define MS_OS_20_DESC_LEN  0xB2
-
-// BOS Descriptor is required
-uint8_t const desc_bos[] =
-{
-  0x12, 0x03, 0x4D, 0x00, 0x53, 0x00, 0x46, 0x00, 0x54, 0x00, 0x31, 0x00, 0x30, 0x00, 0x30, 0x00, 0x90, 0x00
-};
-
+// BOS Descriptor - minimal for USB 2.0 device
+// Xbox 360 devices don't use BOS, so we return NULL
 uint8_t const * tud_descriptor_bos_cb(void)
 {
-  return desc_bos;
+  return NULL;
 }
 
-uint8_t const desc_ms_os_20[] =
+//--------------------------------------------------------------------+
+// Microsoft OS 1.0 Descriptors
+//--------------------------------------------------------------------+
+
+/* Microsoft OS 1.0 Extended Compat ID Descriptor
+ * This is critical for Xbox 360 controller emulation!
+ * Returns "XUSB10" as the compatible ID which tells Windows to load xusb22.sys driver
+ *
+ * Structure:
+ * - Header (16 bytes)
+ * - Function sections (24 bytes each, one per interface)
+ */
+
+// MS OS 1.0 Extended Compat ID Descriptor for entire device
+// We need to return "XUSB10" for the first interface to trigger Xbox driver loading
+#define MS_OS_1_0_COMPAT_ID_LEN  (16 + 24 * 1)  // Header + 1 function section
+
+uint8_t const desc_ms_os_1_0_compat_id[] =
 {
-  // Set header: length, type, windows version, total length
-  U16_TO_U8S_LE(0x000A), U16_TO_U8S_LE(MS_OS_20_SET_HEADER_DESCRIPTOR), U32_TO_U8S_LE(0x06030000), U16_TO_U8S_LE(MS_OS_20_DESC_LEN),
+  // Header (16 bytes)
+  U32_TO_U8S_LE(MS_OS_1_0_COMPAT_ID_LEN),  // dwLength (40 bytes = 0x28)
+  0x00, 0x01,                               // bcdVersion (1.00)
+  0x04, 0x00,                               // wIndex (Extended Compat ID)
+  0x01,                                     // bCount (1 function section)
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved (7 bytes)
 
-  // Configuration subset header: length, type, configuration index, reserved, configuration total length
-  U16_TO_U8S_LE(0x0008), U16_TO_U8S_LE(MS_OS_20_SUBSET_HEADER_CONFIGURATION), 0, 0, U16_TO_U8S_LE(MS_OS_20_DESC_LEN-0x0A),
-
-  // Function Subset header: length, type, first interface, reserved, subset length
-  U16_TO_U8S_LE(0x0008), U16_TO_U8S_LE(MS_OS_20_SUBSET_HEADER_FUNCTION), ITF_NUM_VENDOR, 0, U16_TO_U8S_LE(MS_OS_20_DESC_LEN-0x0A-0x08),
-
-  // MS OS 2.0 Compatible ID descriptor: length, type, compatible ID, sub compatible ID
-  U16_TO_U8S_LE(0x0014), U16_TO_U8S_LE(MS_OS_20_FEATURE_COMPATBLE_ID), 'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // sub-compatible
-
-  // MS OS 2.0 Registry property descriptor: length, type
-  U16_TO_U8S_LE(MS_OS_20_DESC_LEN-0x0A-0x08-0x08-0x14), U16_TO_U8S_LE(MS_OS_20_FEATURE_REG_PROPERTY),
-  U16_TO_U8S_LE(0x0007), U16_TO_U8S_LE(0x002A), // wPropertyDataType, wPropertyNameLength and PropertyName "DeviceInterfaceGUIDs\0" in UTF-16
-  'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00, 'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00,
-  'r', 0x00, 'f', 0x00, 'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00, 'D', 0x00, 's', 0x00, 0x00, 0x00,
-  U16_TO_U8S_LE(0x0050), // wPropertyDataLength
-	//bPropertyData: “{975F44D9-0D08-43FD-8B3E-127CA8AFFF9D}”.
-  '{', 0x00, '9', 0x00, '7', 0x00, '5', 0x00, 'F', 0x00, '4', 0x00, '4', 0x00, 'D', 0x00, '9', 0x00, '-', 0x00,
-  '0', 0x00, 'D', 0x00, '0', 0x00, '8', 0x00, '-', 0x00, '4', 0x00, '3', 0x00, 'F', 0x00, 'D', 0x00, '-', 0x00,
-  '8', 0x00, 'B', 0x00, '3', 0x00, 'E', 0x00, '-', 0x00, '1', 0x00, '2', 0x00, '7', 0x00, 'C', 0x00, 'A', 0x00,
-  '8', 0x00, 'A', 0x00, 'F', 0x00, 'F', 0x00, 'F', 0x00, '9', 0x00, 'D', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00
+  // Function Section 1 (24 bytes) - Interface 0
+  0x00,                                     // bFirstInterfaceNumber (interface 0)
+  0x04,                                     // Reserved (real Harmonix uses 0x04, not 0x01 per spec!)
+  // compatibleID (8 bytes) - "XUSB10" padded with zeros
+  'X', 'U', 'S', 'B', '1', '0', 0x00, 0x00,
+  // subCompatibleID (8 bytes) - empty
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  // Reserved (6 bytes)
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-TU_VERIFY_STATIC(sizeof(desc_ms_os_20) == MS_OS_20_DESC_LEN, "Incorrect size");
+TU_VERIFY_STATIC(sizeof(desc_ms_os_1_0_compat_id) == MS_OS_1_0_COMPAT_ID_LEN, "Incorrect MS OS 1.0 Compat ID size");
 
 //--------------------------------------------------------------------+
 // String Descriptors
@@ -284,10 +264,11 @@ char const* string_desc_arr [] =
   "Harmonix Music",                // 1: Manufacturer
   "Harmonix Guitar for Xbox 360",  // 2: Product
   "003D4C96",                      // 3: Serials, should use chip ID
-  "Xbox Security Method 3, Version 1.00"
+  "Xbox Security Method 3, Version 1.00, \xA9 2005 Microsoft Corporation. All rights reserved."  // 4: Xbox Security
 };
 
-static uint16_t _desc_str[32];
+// Increased buffer size to hold the long Xbox Security string (90+ chars)
+static uint16_t _desc_str[96];
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -301,7 +282,30 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   {
     memcpy(&_desc_str[1], string_desc_arr[0], 2);
     chr_count = 1;
-  }else
+  }
+  else if ( index == 0xEE )
+  {
+    // Microsoft OS 1.0 String Descriptor
+    // This is the magic string that tells Windows/Xbox to request Extended Compat ID descriptors
+    // Format: bLength, bDescriptorType, "MSFT100" in UTF-16LE, vendor code
+    // Total: 18 bytes = 0x12 0x03 'M' 0x00 'S' 0x00 'F' 0x00 'T' 0x00 '1' 0x00 '0' 0x00 '0' 0x00 <vendor_code> 0x00
+
+    // CRITICAL: Must use uint8_t array, not uint16_t, to avoid endianness issues!
+    static uint8_t const msft_str[] = {
+      0x12,       // bLength = 18 bytes
+      0x03,       // bDescriptorType = STRING
+      'M', 0x00,  // 'M' in UTF-16LE
+      'S', 0x00,  // 'S' in UTF-16LE
+      'F', 0x00,  // 'F' in UTF-16LE
+      'T', 0x00,  // 'T' in UTF-16LE
+      '1', 0x00,  // '1' in UTF-16LE
+      '0', 0x00,  // '0' in UTF-16LE
+      '0', 0x00,  // '0' in UTF-16LE
+      MS_OS_1_0_VENDOR_CODE, 0x00  // Vendor code 0x90 in UTF-16LE
+    };
+    return (uint16_t const*)msft_str;
+  }
+  else
   {
     // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
     // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
@@ -310,9 +314,9 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
     const char* str = string_desc_arr[index];
 
-    // Cap at max char
+    // Cap at max char (buffer size - 1 for header)
     chr_count = (uint8_t) strlen(str);
-    if ( chr_count > 31 ) chr_count = 31;
+    if ( chr_count > 95 ) chr_count = 95;
 
     // Convert ASCII string into UTF-16
     for(uint8_t i=0; i<chr_count; i++)
