@@ -52,54 +52,7 @@ uint8_t const * tud_descriptor_device_cb(void)
   return (uint8_t const *) &desc_device;
 }
 
-//--------------------------------------------------------------------+
-// HID Report Descriptor
-//--------------------------------------------------------------------+
-
-uint8_t const desc_hid_report1[] =
-{
-  TUD_HID_REPORT_DESC_KEYBOARD()
-};
-
-uint8_t const desc_hid_report2[] =
-{
-  TUD_HID_REPORT_DESC_MOUSE()
-};
-
-uint8_t const desc_hid_report3[] =
-{
-  TUD_HID_REPORT_DESC_MOUSE()
-};
-
-uint8_t const desc_hid_report4[] =
-{
-  TUD_HID_REPORT_DESC_MOUSE()
-};
-
-// Invoked when received GET HID REPORT DESCRIPTOR
-// Application return pointer to descriptor
-// Descriptor contents must exist long enough for transfer to complete
-uint8_t const * tud_hid_descriptor_report_cb(uint8_t itf)
-{
-  if (itf == 0)
-  {
-    return desc_hid_report1;
-  }
-  else if (itf == 1)
-  {
-    return desc_hid_report2;
-  }
-  else if (itf == 2)
-  {
-    return desc_hid_report3;
-  }
-  else if (itf == 3)
-  {
-    return desc_hid_report4;
-  }
-
-  return NULL;
-}
+// HID Report Descriptors removed - Xbox 360 controller uses VENDOR class, not HID
 
 //--------------------------------------------------------------------+
 // Configuration Descriptor
@@ -107,10 +60,10 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t itf)
 
 enum
 {
-  ITF_NUM_HID1 = 0,
-  ITF_NUM_HID2,
-  ITF_NUM_HID3,
-  ITF_NUM_HID4,
+  ITF_NUM_VENDOR_0 = 0,
+  ITF_NUM_VENDOR_1,
+  ITF_NUM_VENDOR_2,
+  ITF_NUM_VENDOR_3,
   ITF_NUM_TOTAL
 };
 
@@ -188,10 +141,10 @@ uint8_t const desc_configuration[] =
 
   // EP: 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
   // bInterfaceNumber, iInterface, bInterfaceSubClass, bInterfaceProtocol
-  TUD_VENDOR_DESCRIPTOR_1(ITF_NUM_HID1, 0x00, 0x5D, 0x01),
-  TUD_VENDOR_DESCRIPTOR_2(ITF_NUM_HID2, 0x00, 0x5D, 0x03),
-  TUD_VENDOR_DESCRIPTOR_3(ITF_NUM_HID3, 0x00, 0x5D, 0x02),
-  TUD_VENDOR_DESCRIPTOR_4(ITF_NUM_HID4, 0x04, 0xFD, 0x13)
+  TUD_VENDOR_DESCRIPTOR_1(ITF_NUM_VENDOR_0, 0x00, 0x5D, 0x01),
+  TUD_VENDOR_DESCRIPTOR_2(ITF_NUM_VENDOR_1, 0x00, 0x5D, 0x03),
+  TUD_VENDOR_DESCRIPTOR_3(ITF_NUM_VENDOR_2, 0x00, 0x5D, 0x02),
+  TUD_VENDOR_DESCRIPTOR_4(ITF_NUM_VENDOR_3, 0x04, 0xFD, 0x13)
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR

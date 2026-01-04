@@ -16,10 +16,10 @@ extern uint8_t const desc_ms_os_1_0_compat_id[];
 
 // Interface index depends on the order in configuration descriptor
 enum {
-  ITF_KEYBOARD = 0,
-  ITF_MOUSE = 1,
-  ITF_MOUSE2 = 2,
-  ITF_MOUSE3 = 3
+  ITF_VENDOR_0 = 0,
+  ITF_VENDOR_1 = 1,
+  ITF_VENDOR_2 = 2,
+  ITF_VENDOR_3 = 3
 };
 
 /* Blink pattern
@@ -36,7 +36,7 @@ enum  {
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
 void led_blinking_task(void);
-void hid_task(void);
+void vendor_task(void);
 
 /*------------- MAIN -------------*/
 int main(void)
@@ -51,7 +51,7 @@ int main(void)
     tud_task(); // tinyusb device task
     led_blinking_task();
 
-    hid_task();
+    vendor_task();
   }
 
   return 0;
@@ -89,10 +89,10 @@ void tud_resume_cb(void)
 }
 
 //--------------------------------------------------------------------+
-// USB HID
+// USB Vendor (Xbox 360 Controller)
 //--------------------------------------------------------------------+
 
-void hid_task(void)
+void vendor_task(void)
 {
   // Poll every 10ms
   const uint32_t interval_ms = 10;
@@ -111,91 +111,8 @@ void hid_task(void)
     tud_remote_wakeup();
   }
 
-  /*------------- Keyboard -------------*/
-  if ( tud_hid_n_ready(ITF_KEYBOARD) )
-  {
-    // use to avoid send multiple consecutive zero report for keyboard
-    static bool has_key = false;
-
-    if ( btn )
-    {
-      uint8_t keycode[6] = { 0 };
-      keycode[0] = HID_KEY_A;
-
-      tud_hid_n_keyboard_report(ITF_KEYBOARD, 0, 0, keycode);
-
-      has_key = true;
-    }else
-    {
-      // send empty key report if previously has key pressed
-      if (has_key) tud_hid_n_keyboard_report(ITF_KEYBOARD, 0, 0, NULL);
-      has_key = false;
-    }
-  }
-
-  /*------------- Mouse -------------*/
-  if ( tud_hid_n_ready(ITF_MOUSE) )
-  {
-    if ( btn )
-    {
-      int8_t const delta = 5;
-
-      // no button, right + down, no scroll pan
-      tud_hid_n_mouse_report(ITF_MOUSE, 0, 0x00, delta, delta, 0, 0);
-    }
-  }
-
-  /*------------- Mouse -------------*/
-  if ( tud_hid_n_ready(ITF_MOUSE2) )
-  {
-    if ( btn )
-    {
-      int8_t const delta = 5;
-
-      // no button, right + down, no scroll pan
-      tud_hid_n_mouse_report(ITF_MOUSE2, 0, 0x00, delta, delta, 0, 0);
-    }
-  }
-
-  /*------------- Mouse -------------*/
-  if ( tud_hid_n_ready(ITF_MOUSE3) )
-  {
-    if ( btn )
-    {
-      int8_t const delta = 5;
-
-      // no button, right + down, no scroll pan
-      tud_hid_n_mouse_report(ITF_MOUSE3, 0, 0x00, delta, delta, 0, 0);
-    }
-  }
-}
-
-
-// Invoked when received GET_REPORT control request
-// Application must fill buffer report's content and return its length.
-// Return zero will cause the stack to STALL request
-uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen)
-{
-  // TODO not Implemented
-  (void) itf;
-  (void) report_id;
-  (void) report_type;
-  (void) buffer;
-  (void) reqlen;
-
-  return 0;
-}
-
-// Invoked when received SET_REPORT control request or
-// received data on OUT endpoint ( Report ID = 0, Type = 0 )
-void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
-{
-  // TODO set LED based on CAPLOCK, NUMLOCK etc...
-  (void) itf;
-  (void) report_id;
-  (void) report_type;
-  (void) buffer;
-  (void) bufsize;
+  // TODO: Implement Xbox 360 controller input reports
+  // For now, we just handle enumeration
 }
 
 //--------------------------------------------------------------------+
@@ -216,30 +133,32 @@ const tusb_desc_webusb_url_t desc_url =
 // return false to stall control endpoint (e.g unsupported request)
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request)
 {
-  // nothing to with DATA & ACK stage
+  // Nothing to do with DATA & ACK stages, let TinyUSB handle them
   if (stage != CONTROL_STAGE_SETUP) return true;
 
+  // Microsoft OS 1.0 Descriptor requests
+  // bmRequestType = 0xC0 (Device, Vendor, IN) or 0xC1 (Interface, Vendor, IN)
+  // bRequest = 0x90 (MS_OS_1_0_VENDOR_CODE)
+  // wIndex = 0x0004 (Extended Compat ID) or 0x0005 (Extended Properties)
+  if (request->bRequest == 0x90 && request->wIndex == 0x0004)
+  {
+    // Extended Compat ID OS Feature Descriptor
+    // This returns "XUSB10" which tells Windows to load xusb22.sys driver
+    uint16_t len = request->wLength < MS_OS_1_0_COMPAT_ID_LEN ? request->wLength : MS_OS_1_0_COMPAT_ID_LEN;
+    return tud_control_xfer(rhport, request, (void*)(uintptr_t)desc_ms_os_1_0_compat_id, len);
+  }
+  else if (request->bRequest == 0x90 && request->wIndex == 0x0005)
+  {
+    // Extended Properties - not supported
+    return false;
+  }
+
+  // Handle other vendor requests
   switch (request->bmRequestType_bit.type)
   {
     case TUSB_REQ_TYPE_VENDOR:
-      // Microsoft OS 1.0 Descriptor requests
-      // bRequest = 0x90 (MS_OS_1_0_VENDOR_CODE from usb_descriptors.c)
-      if (request->bRequest == 0x90)
-      {
-        if (request->wIndex == 0x0004)
-        {
-          // Extended Compat ID OS Feature Descriptor
-          // This returns "XUSB10" which tells Windows to load xusb22.sys driver
-          return tud_control_xfer(rhport, request, (void*)(uintptr_t) desc_ms_os_1_0_compat_id, MS_OS_1_0_COMPAT_ID_LEN);
-        }
-        else if (request->wIndex == 0x0005)
-        {
-          // Extended Properties OS Feature Descriptor (not implemented for Xbox controllers)
-          return false;
-        }
-      }
       // Legacy vendor requests (kept for compatibility)
-      else if (request->bRequest == 0)
+      if (request->bRequest == 0)
       {
         // match vendor request in BOS descriptor
         // Get landing page url

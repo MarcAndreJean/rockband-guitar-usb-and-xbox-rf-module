@@ -6,7 +6,7 @@ Connection Information:
 Device current bus speed: FullSpeed
 Device supports USB 1.1 specification
 Device supports USB 2.0 specification
-Device address: 0x000D
+Device address: 0x0011
 Current configuration value: 0x00
 Number of open pipes: 0
 
