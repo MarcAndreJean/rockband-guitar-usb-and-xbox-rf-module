@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(git submodule status)",
+      "Read(//c/dev/pico-sdk/src/rp2_common/tinyusb/include/bsp/**)",
+      "Read(//c/dev/pico-sdk/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,56 @@
+# Second time plug
+
+GET DESCRIPTOR Request DEVICE
+GET DESCRIPTOR Request CONFIGURATION (partial, max 37)
+GET DESCRIPTOR Request CONFIGURATION (full length)
+
+GET STATUS Request
+
+SET CONFIGURATION Request
+
+SET INTERFACE Request (x2)
+
+GET DESCRIPTOR Request STRING (Harmonix Guitar for Xbox 360)
+
+0xC1: Device to Host, Vendor, recipient is Interface
+
+0xC0: Device to Host, Vendor, recipient is Device
+
+bmRequestType, bRequest, wValue, wIndex, wLength
+
+| Destination (endpoint) | bmRequestType | bRequest | wValue | wIndex | wLength | Reponse from device? |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0x80 (1.6.0) | 0xC1 | 1 | 0x0100 | 0 | 20 | N |
+| 0x80 (1.6.0) | 0xC1 | 1 | 0x0000 | 0 | 8 | N |
+| 0x80 (1.6.0) | 0xC0 | 1 | 0x0000 | 0 | 4 | 01 03 0e |
+| 0x81 (Host) |  |  |  |  |  |  |
+| 0x80
+(1.6.0 → host) | 00 14 7f f5 ff 00 00 00 00 00 c0 ff c0 ff 00 00
+0010 00 00 00 00 | 0xC0
+1
+0
+0
+4 |  |  |  |  |
+| 0x81
+(1.6.1 → host) | 00 14 00 00 19 00 00 00 00 00 ff 7f 00 00 00 00
+0010 00 00 00 00 |  |  |  |  |  |
+| 0x81
+(1.6.1 → host) | 00 14 00 00 4c 00 00 00 00 00 ff 7f 00 00 00 00
+0010 00 00 00 00 |  |  |  |  |  |
+| 0x81
+(1.6.1 → host) | 00 14 00 00 4c 00 00 00 00 00 f0 7c 00 00 00 00
+0010 00 00 00 00 |  |  |  |  |  |
+
+# First plug USB
+
+GET DESCRIPTOR Request DEVICE
+GET DESCRIPTOR Request CONFIGURATION (partial, max 37)
+GET DESCRIPTOR Request CONFIGURATION (full length)
+
+GET STATUS Request
+
+SET CONFIGURATION Request
+
+SET INTERFACE Request (x2)
+
+GET DESCRIPTOR Request STRING (Harmonix Guitar for Xbox 360)
