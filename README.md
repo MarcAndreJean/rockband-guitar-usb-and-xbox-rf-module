@@ -35,6 +35,8 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#current-status">Current Status</a></li>
+    <li><a href="#known-limitation-xbox-360-security-authentication">Known Limitation: Xbox 360 Security Authentication</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -50,6 +52,40 @@
 <!--[![Product Name Screen Shot][product-screenshot]](https://example.com)-->
 
 To feed
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- CURRENT STATUS -->
+## Current Status
+
+The firmware runs on a Raspberry Pi Pico (RP2040) with TinyUSB and pretends to be a Harmonix Rock Band guitar for Xbox 360 (VID `0x1BAD`, PID `0x0002`).
+
+What works:
+- [x] Device descriptor matches the real Harmonix guitar
+- [x] Configuration descriptor with all 4 vendor interfaces and their endpoints matches the real guitar
+- [x] Microsoft OS 1.0 descriptors (OS string descriptor + OS feature descriptor)
+
+What doesn't work:
+- [ ] Xbox 360 security handshake (see below)
+- [ ] Real guitar input reports (frets, strum, whammy, etc.)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- KNOWN LIMITATION -->
+## Known Limitation: Xbox 360 Security Authentication
+
+This is the wall the project is stuck on.
+
+Interface 1 (subclass `0x5D`, protocol `0x01`) is the Xbox 360 security interface. When the controller is plugged in, the console sends it a cryptographic challenge through vendor control requests (e.g. `wValue` `0x5C10` and `0x5B17`). A licensed controller answers with a Microsoft security chip, which holds keys that aren't public.
+
+The Pico has no such chip, so it can't build a valid answer. The current code only sends placeholder (zeroed) data back. The console sees the auth fail and doesn't accept the controller.
+
+Firmware alone can't fix this. The options are:
+- **Pass-through auth:** relay the challenge to a genuine licensed controller (or its security chip) and send its answer back, like [GIMX](https://github.com/matlo/GIMX) does.
+- **Modded console:** run it on a console that skips the auth check.
+- **Aim for PC instead:** the Windows `xusb22` driver doesn't need this auth, so PC support doesn't hit this limit.
+
+Captures and descriptor dumps from the real guitar are in [`information/`](information/).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
