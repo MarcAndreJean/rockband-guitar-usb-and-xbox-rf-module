@@ -34,8 +34,8 @@ tusb_desc_device_t const desc_device =
     .bDeviceProtocol    = 0xFF,
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
-    .idVendor           = USB_VID, // 0x1BAD
-    .idProduct          = USB_PID, // 0x0002
+    .idVendor           = USB_VID, // 0x1BAD - Harmonix Music Systems
+    .idProduct          = USB_PID, // 0x0002 - Guitar for Xbox 360
     .bcdDevice          = 0x0103,
 
     .iManufacturer      = 0x01,

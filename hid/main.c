@@ -89,6 +89,14 @@ void tud_resume_cb(void)
 }
 
 //--------------------------------------------------------------------+
+// Xbox 360 Security Handshake State
+//--------------------------------------------------------------------+
+
+// Security handshake state machine
+static uint8_t security_initialized = 0;
+static uint8_t security_response_count = 0;
+
+//--------------------------------------------------------------------+
 // USB Vendor (Xbox 360 Controller)
 //--------------------------------------------------------------------+
 
@@ -112,7 +120,7 @@ void vendor_task(void)
   }
 
   // TODO: Implement Xbox 360 controller input reports
-  // For now, we just handle enumeration
+  // For now, we just handle enumeration and security handshake
 }
 
 //--------------------------------------------------------------------+
@@ -153,28 +161,116 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     return false;
   }
 
-  // Handle other vendor requests
-  switch (request->bmRequestType_bit.type)
+  // Xbox 360 Security Handshake - Based on GIMX firmware
+  // The Xbox 360 uses a vendor-specific security handshake during enumeration
+  if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
   {
-    case TUSB_REQ_TYPE_VENDOR:
-      // Legacy vendor requests (kept for compatibility)
-      if (request->bRequest == 0)
-      {
-        // match vendor request in BOS descriptor
-        // Get landing page url
-        return tud_control_xfer(rhport, request, (void*)(uintptr_t) &desc_url, desc_url.bLength);
-      }
-    break;
+    // During initialization, the host sends specific vendor requests
+    // wValue 0x5c10 and 0x5b17 are part of the security challenge-response
+    if (!security_initialized)
+    {
+      // Track security handshake progress
+      // NOTE: Full Xbox 360 security requires cryptographic responses from a security chip
+      // This implementation provides basic responses for enumeration
+      // Real authentication would require genuine security data
 
-    case TUSB_REQ_TYPE_CLASS:
-      if (request->bRequest == 0x22)
+      if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
       {
-        // response with status OK
-        return tud_control_status(rhport, request);
-      }
-    break;
+        // Device to Host requests during security handshake
+        if (request->wValue == 0x5c10)
+        {
+          // Security initialization request
+          // The response data would normally come from a security chip
+          // For now, we return empty data to acknowledge the request
+          static uint8_t security_response[20] = {0};
+          uint16_t len = request->wLength < sizeof(security_response) ? request->wLength : sizeof(security_response);
 
-    default: break;
+          if (security_response_count > 0) {
+            security_initialized = 1;  // Mark as initialized after second response
+          }
+          security_response_count++;
+
+          return tud_control_xfer(rhport, request, security_response, len);
+        }
+        else if (request->wValue == 0x5b17)
+        {
+          // Another security request - can trigger reset in real implementation
+          static uint8_t response[20] = {0};
+          uint16_t len = request->wLength < sizeof(response) ? request->wLength : sizeof(response);
+          return tud_control_xfer(rhport, request, response, len);
+        }
+      }
+      else
+      {
+        // Host to Device requests - just acknowledge
+        static uint8_t buffer[64];
+        return tud_control_xfer(rhport, request, buffer, request->wLength);
+      }
+    }
+    else
+    {
+      // After security handshake, handle standard vendor requests
+      if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
+      {
+        // Device to Host
+        if (request->bRequest == 0x01)
+        {
+          // GET_REPORT equivalent for vendor class
+          if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+          {
+            // Interface-specific request - return controller state (20 bytes)
+            static uint8_t const report[] = {
+              0x00, 0x14, 0xff, 0xf7, 0xff, 0xff, 0xc0, 0xff,
+              0xc0, 0xff, 0xc0, 0xff, 0xc0, 0xff, 0x00, 0x00,
+              0x00, 0x00, 0x00, 0x00
+            };
+            return tud_control_xfer(rhport, request, (void*)(uintptr_t)report, sizeof(report));
+          }
+          else
+          {
+            // Device-level request (4 bytes)
+            static uint8_t const response[] = { 0x01, 0x00, 0x83, 0x66 };
+            return tud_control_xfer(rhport, request, (void*)(uintptr_t)response, sizeof(response));
+          }
+        }
+        else if (request->bRequest == 0xa1)
+        {
+          // Another vendor request
+          static uint8_t const response[] = { 0x01, 0x02 };
+          return tud_control_xfer(rhport, request, (void*)(uintptr_t)response, sizeof(response));
+        }
+        else if (request->wValue == 0x5b17)
+        {
+          // Reset request - could trigger hard reset
+          // For now, just stall
+          return false;
+        }
+      }
+      else
+      {
+        // Host to Device - acknowledge
+        static uint8_t buffer[64];
+        return tud_control_xfer(rhport, request, buffer, request->wLength);
+      }
+    }
+
+    // Legacy vendor requests (kept for compatibility)
+    if (request->bRequest == 0)
+    {
+      // match vendor request in BOS descriptor
+      // Get landing page url
+      return tud_control_xfer(rhport, request, (void*)(uintptr_t) &desc_url, desc_url.bLength);
+    }
+  }
+
+  // Handle class requests
+  if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS)
+  {
+    if (request->bRequest == 0x22)
+    {
+      // response with status OK
+      return tud_control_status(rhport, request);
+    }
   }
 
   // stall unknown request
