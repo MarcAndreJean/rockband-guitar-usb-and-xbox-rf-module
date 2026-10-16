@@ -1,29 +1,36 @@
-set(PROJECT "hid")
-set(BOARD "pico_sdk")
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13)
 
-# initialize the SDK based on PICO_SDK_PATH
-# note: this must happen before project()
+# Include the Pico SDK
 include(pico_sdk_import.cmake)
-include(tinyusb/hw/bsp/family_support.cmake)
 
-family_get_project_name(${PROJECT} ${CMAKE_CURRENT_LIST_DIR})
-project(${PROJECT})
+project(hid C CXX ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-family_initialize_project(${PROJECT} ${CMAKE_CURRENT_LIST_DIR})
+# Initialize the Pico SDK
+pico_sdk_init()
 
-add_executable(${PROJECT})
+# Create the executable
+add_executable(hid
+        main.c
+        usb_descriptors.c
+)
 
-target_sources(${PROJECT} PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/main.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/usb_descriptors.c
-        )
-
-# Example include
-target_include_directories(${PROJECT} PUBLIC
+# Include directories
+target_include_directories(hid PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+)
 
-# Configure compilation flags and libraries for the example... see the corresponding function
-# in hw/bsp/FAMILY/family.cmake for details.
-family_configure_device_example(${PROJECT})
+# Link against Pico SDK libraries
+target_link_libraries(hid
+        pico_stdlib
+        tinyusb_device
+        tinyusb_board
+)
+
+# Create map/bin/hex/uf2 files
+pico_add_extra_outputs(hid)
+
+# Enable USB output, disable UART output
+pico_enable_stdio_usb(hid 0)
+pico_enable_stdio_uart(hid 1)
